@@ -1,9 +1,12 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
+
+	"github.com/marcofeltmann/weather-forecast-aggregator/internal/api"
 )
 
 /*
@@ -15,13 +18,19 @@ This avoids a lot of the annoying 'if err != nil { println(err); return }' we've
 all seen out there
 */
 func main() {
-	var logger = slog.Default()
-	if err := run(logger); err != nil {
+	logger := slog.Default()
+	host := ":8080"
+	logger.Info("Starting server", slog.String("address", host))
+	if err := run(logger, host); err != nil {
 		logger.Error("Server failed while running.", slog.Any("result", err))
 		os.Exit(2)
 	}
 }
 
-func run(logger *slog.Logger) error {
-	return errors.New("NYI")
+func run(logger *slog.Logger, host string) error {
+	srv := api.NewServer(logger)
+	if err := http.ListenAndServe(host, srv.Handler()); err != nil {
+		return fmt.Errorf("ListenAndServe on %s failed: %w", host, err)
+	}
+	return nil
 }
