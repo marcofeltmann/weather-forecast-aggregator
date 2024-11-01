@@ -251,3 +251,36 @@ Accepted
 - can be generated later from the rather simple code
 - can't imagine there's somebody sad 'cuz I not expect anyone to re-invent this 
 server
+
+----
+
+# ADR-07: Use structured logging with `log/slog`
+
+## Context
+
+When it comes to app logging there are a few options and two mutually exclusive
+opinions: 
+
+- Logging is meant for people, so write prose.
+- Logs are read by machines, so structure them in machine-readable formats
+
+## Decision
+
+I use structured logging with the Go `log/slog` standard library package.
+
+## Status
+
+Accepted.
+
+## Consequences
+
+### Positive
+
+- Even if it's structured the logs are human-readable
+- Because it is structured it's easy to extend information to it
+
+### Neutral
+
+- By changing a few lines the `log/slog` can be configured to output JSON
+- Not a real drop-in replacement for `log`, but I don't have legacy code yet
+
