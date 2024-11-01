@@ -216,3 +216,38 @@ Use Grafana k6 for blackbox testing.
 - additional dependency
 - requires node and npm whose dependency tree is considered highly intransparent
 
+----
+
+# ADR-06: Skip automated API documentation
+
+## Context
+
+It is a pretty good idea to document APIs with OpenAPI, Swagger or similar tools.
+This way consumers of the API can get a comprehensive overview and even test the
+API.
+
+Devs can also use that documentation to generate their own clients and servers.
+
+This introduces some overhead and dependencies, though. The sample and it's API
+is considered rather simple.
+
+## Decision
+
+I'll skip that overhead for my one or two endpoints.
+
+## Status
+
+Accepted
+
+## Consequences
+
+### Positive
+
+- less dependencies
+- more time to hack
+
+## Neutral
+
+- can be generated later from the rather simple code
+- can't imagine there's somebody sad 'cuz I not expect anyone to re-invent this 
+server
