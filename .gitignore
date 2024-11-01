@@ -24,3 +24,6 @@ go.work.sum
 # I write my Markdown with neovim but read and correct it in obsidian, but that
 # configuration is not needed in this repository
 .obsidian/
+
+# No need to persist my approach of project management
+tasks/
