@@ -17,6 +17,7 @@ https://grafana.com/blog/2024/02/09/how-i-write-http-services-in-go-after-13-yea
 type Server struct {
 	logger *slog.Logger
 	mux    *http.ServeMux
+	// TODO: Export vars managed here
 }
 
 /*
@@ -26,6 +27,11 @@ Currently the server itself only contains references, so it's safe to return a
 value type.
 */
 func NewServer(logger *slog.Logger) Server {
+	if logger == nil {
+		slog.SetLogLoggerLevel(slog.LevelDebug)
+		logger = slog.Default()
+		logger.Debug("NewServer called without logger, using slog.Default()")
+	}
 	/*
 		As http.DefaultServeMux is a package-global reference type variable every
 		third-party package might manipulate it. Even a different package in this
@@ -34,11 +40,13 @@ func NewServer(logger *slog.Logger) Server {
 		So creating a new ServeMux type prevents unexpected side effects.
 	*/
 	mux := http.NewServeMux()
-	addRoutes(mux, logger)
-	return Server{
-		logger: logger,
+	s := Server{
 		mux:    mux,
+		logger: logger,
 	}
+
+	s.addRoutes()
+	return s
 }
 
 func (s Server) Handler() http.Handler {
