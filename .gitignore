@@ -27,3 +27,6 @@ go.work.sum
 
 # No need to persist my approach of project management
 tasks/
+
+# produced built artifacts must not persist in a code management system
+sampleservice
