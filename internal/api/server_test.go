@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/marcofeltmann/weather-forecast-aggregator/internal/api"
+	"github.com/marcofeltmann/weather-forecast-aggregator/internal/types"
 )
 
 func TestGetNonExistingEndpoint_ReturnsNotFoundStatus(t *testing.T) {
@@ -136,7 +137,7 @@ func TestGetWeatherEndpoint_ReturnsResult(t *testing.T) {
 		t.Fatal("Can't verify response integrity, aborting!")
 	}
 
-	var result api.Result
+	var result types.Result
 	err = json.Unmarshal(data, &result)
 	if err != nil {
 		t.Errorf("Unable to unmarshal API response data, got %+v", err)

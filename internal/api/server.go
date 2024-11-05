@@ -3,6 +3,8 @@ package api
 import (
 	"log/slog"
 	"net/http"
+
+	"github.com/marcofeltmann/weather-forecast-aggregator/internal/aggregator/openmeteo"
 )
 
 /*
@@ -51,4 +53,15 @@ func NewServer(logger *slog.Logger) Server {
 
 func (s Server) Handler() http.Handler {
 	return s.mux
+}
+
+var meteo Aggregator
+
+func (s Server) aggregators() []Aggregator {
+	if meteo == nil {
+		meteo = openmeteo.DefaultCaller()
+	}
+
+	res := []Aggregator{meteo}
+	return res
 }

@@ -1,20 +1,15 @@
 package api
 
 import (
+	"encoding/json"
 	"expvar"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
-)
 
-type Result struct {
-	ExternalApiId string
-	Day1          string
-	Day2          string
-	Day3          string
-	Day4          string
-	Day5          string
-}
+	"github.com/marcofeltmann/weather-forecast-aggregator/internal/types"
+)
 
 const MissingParameterErrorDescription = `Missing request parameter(s).
 Please provide valid 'lat' and 'lon' in the URL.`
@@ -73,13 +68,39 @@ func (s Server) notImplementedHandler(w http.ResponseWriter, r *http.Request) {
 		slog.Float64("longitude", lon),
 	)
 
-	w.WriteHeader(http.StatusNotImplemented)
-	_, err = w.Write([]byte("{}"))
-	if err != nil {
-		s.logger.Error(
-			"Write response failed",
-			slog.String("status", http.StatusText(http.StatusBadRequest)),
-			slog.Any("error", err),
-		)
+	transfer := struct {
+		WeatherAPI1 types.FiveDayForecast
+		// Extend with new APIs here
+	}{}
+
+	aa := s.aggregators()
+	for i, a := range aa {
+		part, err := a.AggregateWeather(lat, lon)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Request API %d failed: %+v", i, err)
+			return
+		}
+		switch i {
+		case 0:
+			transfer.WeatherAPI1 = part
+
+		// Extend with new APIs here
+
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Unhandled WeatherAPI ID %d", i)
+			return
+		}
 	}
+
+	data, err := json.Marshal(transfer)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Marshalling response %+v failed: %+v", transfer, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(data)
 }
