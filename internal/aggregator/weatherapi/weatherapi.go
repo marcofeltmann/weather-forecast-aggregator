@@ -27,7 +27,6 @@ func DefaultCaller(apikey string) (*Caller, error) {
 }
 
 func DebuggingCaller(key string, c *http.Client, cf func() time.Time) (*Caller, error) {
-	fmt.Println(key)
 	var empty string
 	if empty == key {
 		return nil, ErrNoApiKeyProvided

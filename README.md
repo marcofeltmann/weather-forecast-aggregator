@@ -1,6 +1,6 @@
 # Usage
 
-You simply `go run cmd/server --weather-api-key==<your key>` and in another 
+You simply `go run . --weather-api-key=<your key>` and in another 
 terminal (session) just
 `curl 'http://localhost:8080/weather?lat=42.6493934&lon=-8.8201753'`
 if you want to see the forecast for my region.
@@ -17,6 +17,13 @@ package.
 
 For viewing the metrics I highly recommend the awesome [expvarmon](https://github.com/divan/expvarmon)
 project.
+
+The changing metrics can be monitored via the following command, given you didn't
+provide another application port during server startup.
+
+```sh
+expvarmon -ports "8080" -vars="requests_sum,duration_min,duration_max,errors_sum"
+```
 
 # Dependencies
 
@@ -51,6 +58,25 @@ Using `go mod vendor` copys the required code of that package into this
 repository so we have life-time access to the used version with the little
 overhead of a slightly larger app repository
 
+## [github.com/google/go-cmp](https://pkg.go.dev/github.com/google/go-cmp@v0.6.0) by The Go Authors
+
+This packages provides an easier and more reliable way to compare structs and
+other complex data types for semantical equality than a self-coded solution with
+the standard library's `reflect` package does.
+
+### Risk Analysis
+
+It's not directly bound to the official Google repositories, only created by the
+Go Authors.  
+The BSD license does not exclude a potencial disappearance of this package.
+
+### Risk Minimization Options
+
+Using `go mod vendor` enables the usage of the `co-cmp` package even when it was
+discontinued.
+
+Limiting usage on testing reduces the amount of rewrite work of the functionality.
+
 ## [golang.org/x/sync](https://pkg.go.dev/golang.org/x/sync) by Google
 
 The sync package provides ErrorGroups that act like WaitGroups, but they are
@@ -72,25 +98,6 @@ library.
 
 Using `go mod vendor` enables the usage of the `x/sync` package without code
 changes even after it was transferred to the standard library.
-
-## [github.com/google/go-cmp](https://pkg.go.dev/github.com/google/go-cmp@v0.6.0) by The Go Authors
-
-This packages provides an easier and more reliable way to compare structs and
-other complex data types for semantical equality than a self-coded solution with
-the standard library's `reflect` package does.
-
-### Risk Analysis
-
-It's not directly bound to the official Google repositories, only created by the
-Go Authors.  
-The BSD license does not exclude a potencial disappearance of this package.
-
-### Risk Minimization Options
-
-Using `go mod vendor` enables the usage of the `co-cmp` package even when it was
-discontinued.
-
-Limiting usage on testing reduces the amount of rewrite work of the functionality.
 
 ## Primer: Manage Application Dependencies
 
@@ -156,33 +163,6 @@ has just a few seconds to execute.
 
 The codebase itself is hosted in a public repository on GitHub, so the risk of
 source code leeking kinda doesn't exist.
-
-## Application [k6](https://k6.io/) by Grafana
-
-Grafana k6 is an end-to-end testing solution for kubernetes and web services.  
-It has a broad feature set with performance tests, API and UI tests, stress and
-spike tests.
-
-It is able to communicate with API, GraphQL, WebSockets and gRPC services and is
-able to manage tresholds or handle cookies.
-
-
-### Risk Analysis
-
-As Grafana makes a living with testing and monitoring system-as-a-service
-offers they know that less-featured FOSS options are great to get customers
-hooked to the paid services.
-
-It feels very unlikely to me that the OpenSource version of k6 will disappear.  
-But there never is a guarantee.
-
-### Risk Minimization Options
-
-Checking in all the node modules to keep it running after `npm install` would
-reduce the risk alot.  
-As this is such a small project and QA isn't really involved I'll take the risk
-to rewrite all the blackbox tests in Golang whenever the worst case happens.
-Not sure if I'm still interested in this project at that time, though.
 
 # License
 

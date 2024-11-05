@@ -21,10 +21,17 @@ func TestHappyPath(t *testing.T) {
 		t.Fatalf("OpenWeatherMap API Key retrieval: %+v", err)
 	}
 
+	t.Log("This test runs against the real forecast endpoint, as the historical API differs.")
+	t.Log("So it might break every single day.")
+
 	// Technical debt: This uses the default http.Client and calls the API endpoint.
 	// As nobody knows how long the historical data is stored there might be false
 	// negatives in the future.
-	sut := openweathermap.DebuggingCaller(key, &http.Client{}, time.Now)
+	sut, err := openweathermap.DebuggingCaller(key, &http.Client{}, time.Now)
+	if err != nil {
+		t.Errorf("creating DebuggingCaller: %+v", err)
+		t.Fatal("Aborting")
+	}
 
 	got, err := sut.AggregateWeather(lat, lon)
 	if err != nil {
@@ -32,12 +39,45 @@ func TestHappyPath(t *testing.T) {
 		t.Fatal("Cannot verify result, aborting.")
 	}
 
+	/*
+			  types.FiveDayForecast{
+		  	Day1: types.Forecast{
+		- 		Date:    "2024-10-25",
+		+ 		Date:    "2024-11-05",
+		- 		MaxTemp: 14.600000381469727,
+		+ 		MaxTemp: 19.799999237060547,
+		  	},
+		  	Day2: types.Forecast{
+		- 		Date:    "2024-10-26",
+		+ 		Date:    "2024-11-06",
+		- 		MaxTemp: 14.899999618530273,
+		+ 		MaxTemp: 22.100000381469727,
+		  	},
+		  	Day3: types.Forecast{
+		- 		Date:    "2024-10-27",
+		+ 		Date:    "2024-11-07",
+		- 		MaxTemp: 18.200000762939453,
+		+ 		MaxTemp: 21,
+		  	},
+		  	Day4: types.Forecast{
+		- 		Date:    "2024-10-28",
+		+ 		Date:    "2024-11-08",
+		- 		MaxTemp: 21.200000762939453,
+		+ 		MaxTemp: 19,
+		  	},
+		  	Day5: types.Forecast{
+		- 		Date:    "2024-10-29",
+		+ 		Date:    "2024-11-09",
+		- 		MaxTemp: 22.299999237060547,
+		+ 		MaxTemp: 19,
+		  	},
+	*/
 	want := types.FiveDayForecast{
-		Day1: types.Forecast{Date: "2024-10-25", MaxTemp: 14.6},
-		Day2: types.Forecast{Date: "2024-10-26", MaxTemp: 14.9},
-		Day3: types.Forecast{Date: "2024-10-27", MaxTemp: 18.2},
-		Day4: types.Forecast{Date: "2024-10-28", MaxTemp: 21.2},
-		Day5: types.Forecast{Date: "2024-10-29", MaxTemp: 22.3},
+		Day1: types.Forecast{Date: "2024-11-05", MaxTemp: 19.8},
+		Day2: types.Forecast{Date: "2024-11-06", MaxTemp: 22.1},
+		Day3: types.Forecast{Date: "2024-11-07", MaxTemp: 21},
+		Day4: types.Forecast{Date: "2024-11-08", MaxTemp: 19},
+		Day5: types.Forecast{Date: "2024-11-09", MaxTemp: 19},
 	}
 
 	if !cmp.Equal(want, got) {
