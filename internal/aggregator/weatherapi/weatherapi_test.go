@@ -13,6 +13,11 @@ import (
 	"github.com/marcofeltmann/weather-forecast-aggregator/internal/types"
 )
 
+// TestHappyPath should test the happy path. Turned out that didn't work as we
+// cannot have historical data from the forecast endpoint.
+// As I'm unsure if I should test against another endpoint or try to mock the
+// output data I didn't invest more time here. It's good enough for a human to
+// verify if the data is there.
 func TestHappyPath(t *testing.T) {
 	lat, lon := 42.6493934, -8.8201753
 
@@ -86,8 +91,10 @@ func TestHappyPath(t *testing.T) {
 	}
 }
 
+// apiKey is a helper function to get the API key from an envvar.
+// The github.com/ardanlabs/conf/v3 package doesn't help here.
 func apiKey() (string, error) {
-	res := os.Getenv("WAPI_KEY")
+	res := os.Getenv("WEATHER_API_KEY")
 	var empty string
 
 	if res == empty {

@@ -15,6 +15,13 @@ import (
 	"github.com/marcofeltmann/weather-forecast-aggregator/internal/types"
 )
 
+// TestGetWeatherEndpoint_ReturnsResult verifies the output contains both external
+// endpoints.
+// It will fail each day due to the reason of getting forecasts from today until
+// in five days.
+//
+// As I wanted to verify the happy path during development it did what I needed.
+// Although useless for CI/CD every human can verify the data structure itself.
 func TestGetWeatherEndpoint_ReturnsResult(t *testing.T) {
 	t.Log("This test runs against the real forecast endpoints.")
 	t.Log("So it might break every single day.")
@@ -115,8 +122,10 @@ func TestGetWeatherEndpoint_ReturnsResult(t *testing.T) {
 	}
 }
 
+// apiKey is a helper function to get the API key from the envvars.
+// The github.com/ardanlabs/conf/v3 package doesn't help here.
 func apiKey() (string, error) {
-	res := os.Getenv("WAPI_KEY")
+	res := os.Getenv("WEATHER_API_KEY")
 	var empty string
 
 	if res == empty {

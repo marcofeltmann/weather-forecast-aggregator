@@ -28,16 +28,22 @@ func init() {
 const MissingParameterErrorDescription = `Missing request parameter(s).
 Please provide valid 'lat' and 'lon' in the URL.`
 
+// addRoutes manages the endpoint routing for the API server.
+// Having all the information at one place might make navigating through the
+// server easier, as all the info you get is "this endpoint didn't work!"
 func (s Server) addRoutes() {
 	mux := s.mux
 
 	// According to https://go.dev/blog/routing-enhancements the GET method also
 	// handles the HEAD method, so we don't need the HEAD routes.
-	mux.Handle("GET /weather", s.meterMiddleware(s.notImplementedHandler))
+	mux.Handle("GET /weather", s.meterMiddleware(s.dataAggregation))
 
 	mux.Handle("GET /debug/vars", expvar.Handler())
 }
 
+// meterMiddleware returns an http.Handler that wraps an error-aware pseudo-handler.
+// It's doing the RED metrics via expvar, but shouldn't interfere with the http
+// requests and responses.
 func (s Server) meterMiddleware(inner func(http.ResponseWriter, *http.Request) error) http.Handler {
 	var res http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 		s.logger.Info("Handling incoming request.", slog.String("uri", r.RequestURI))
@@ -74,7 +80,9 @@ func (s Server) meterMiddleware(inner func(http.ResponseWriter, *http.Request) e
 	return res
 }
 
-func (s Server) notImplementedHandler(w http.ResponseWriter, r *http.Request) error {
+// dataAggregation verifies the request parameters, hooks up the aggregators and
+// responses with the aggregated data, or with error status and messages.
+func (s Server) dataAggregation(w http.ResponseWriter, r *http.Request) error {
 
 	transfer := struct {
 		WeatherAPI1 types.FiveDayForecast
@@ -127,8 +135,7 @@ func (s Server) notImplementedHandler(w http.ResponseWriter, r *http.Request) er
 		case 1:
 			transfer.WeatherAPI2 = part
 
-			//TODO: Extend with new APIs here
-
+		//TODO: Extend with new APIs here
 		default:
 			extErr := fmt.Errorf("Unhandled WeatherAPI ID %d", i)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -146,6 +153,7 @@ func (s Server) notImplementedHandler(w http.ResponseWriter, r *http.Request) er
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Header().Add("Content-Type", "application/json")
 	_, err = w.Write(data)
 	return err
 }

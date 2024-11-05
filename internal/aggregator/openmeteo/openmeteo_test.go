@@ -12,6 +12,11 @@ import (
 	"github.com/marcofeltmann/weather-forecast-aggregator/internal/types"
 )
 
+// TestOpenMeteoAggregation_HistoricalData uses the side effect of historical
+// data on the forecast endpoint of OpenMeteo.
+// By requesting data from the past it is unlikely that the forecast will change.
+//
+// There might be an issue with time that dates before the historical data.
 func TestOpenMeteoAggregation_HistoricalData(t *testing.T) {
 	lat, lon := 42.6493934, -8.8201753
 
@@ -22,7 +27,7 @@ func TestOpenMeteoAggregation_HistoricalData(t *testing.T) {
 	// real endpoint.
 	// Using an net/httptest server for reproducable responses would be better.
 	// Currently the historical data is still fetched, so it looks good enough.
-	sut := openmeteo.ConfiguredCaller(ctx, &http.Client{}, func() time.Time {
+	sut := openmeteo.DebuggingCaller(ctx, &http.Client{}, func() time.Time {
 		res, err := time.Parse(time.DateOnly, "2024-10-25")
 		if err != nil {
 			t.Fatalf("Cannot test hard-coded past value, got %+v", err)

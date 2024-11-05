@@ -106,8 +106,8 @@ func TestGetWeatherEndpointWithoutParameters_ReturnsBadRequestStatus(t *testing.
 	}
 }
 
-// Coordinates Boundary tests:
+// Uncovered Test Case Ideas:
+//
+// Coordinates Boundary tests as they have limits:
 // lat:  -90.0000000000 --  90.000000000
 // lon: -180.0000000000 -- 180.000000000
-
-// What if date in the past?!
