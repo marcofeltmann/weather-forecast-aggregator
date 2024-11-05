@@ -76,6 +76,12 @@ func (s Server) meterMiddleware(inner func(http.ResponseWriter, *http.Request) e
 
 func (s Server) notImplementedHandler(w http.ResponseWriter, r *http.Request) error {
 
+	transfer := struct {
+		WeatherAPI1 types.FiveDayForecast
+		WeatherAPI2 types.FiveDayForecast
+		//TODO: Extend with new APIs here
+	}{}
+
 	params := r.URL.Query()
 
 	if !params.Has("lat") || !params.Has("lon") {
@@ -99,12 +105,14 @@ func (s Server) notImplementedHandler(w http.ResponseWriter, r *http.Request) er
 		return extErr
 	}
 
-	transfer := struct {
-		WeatherAPI1 types.FiveDayForecast
-		// Extend with new APIs here
-	}{}
+	aa, err := s.aggregators()
+	if err != nil {
+		extErr := fmt.Errorf("receiving aggregators: %w", err)
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, extErr.Error())
+		return extErr
+	}
 
-	aa := s.aggregators()
 	for i, a := range aa {
 		part, err := a.AggregateWeather(lat, lon)
 		if err != nil {
@@ -116,8 +124,10 @@ func (s Server) notImplementedHandler(w http.ResponseWriter, r *http.Request) er
 		switch i {
 		case 0:
 			transfer.WeatherAPI1 = part
+		case 1:
+			transfer.WeatherAPI2 = part
 
-		// Extend with new APIs here
+			//TODO: Extend with new APIs here
 
 		default:
 			extErr := fmt.Errorf("Unhandled WeatherAPI ID %d", i)
