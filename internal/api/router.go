@@ -152,8 +152,9 @@ func (s Server) dataAggregation(w http.ResponseWriter, r *http.Request) error {
 		return extErr
 	}
 
-	w.WriteHeader(http.StatusOK)
+	// TIL: w.Header().Add(...) must be called right before w.WriteHeader()
 	w.Header().Add("Content-Type", "application/json")
+	// w.Write implicitely calls w.WriteHeader(http.StatusOK) before writing data
 	_, err = w.Write(data)
 	return err
 }
