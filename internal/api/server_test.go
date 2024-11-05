@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/marcofeltmann/weather-forecast-aggregator/internal/api"
 	"github.com/marcofeltmann/weather-forecast-aggregator/internal/types"
 )
@@ -109,6 +110,11 @@ func TestGetWeatherEndpointWithoutParameters_ReturnsBadRequestStatus(t *testing.
 }
 
 func TestGetWeatherEndpoint_ReturnsResult(t *testing.T) {
+	// Technical Debt: This runs a test with the default HTTP client against the
+	// real endpoint as I cannot inject some pre-configured http.Client.
+	// So the response data will change at least daily, maybe even within the day
+	// as forecasts get updated.
+	// Using another net/httptest server for reproducable responses would be better.
 	sut := api.NewServer(nil)
 
 	srv := httptest.NewServer(sut.Handler())
@@ -138,15 +144,40 @@ func TestGetWeatherEndpoint_ReturnsResult(t *testing.T) {
 	}
 
 	var result types.Result
-	err = json.Unmarshal(data, &result)
-	if err != nil {
+	if err := json.Unmarshal(data, &result); err != nil {
 		t.Errorf("Unable to unmarshal API response data, got %+v", err)
 		t.Fatal("Can't verify response integrity, aborting!")
 	}
 
-	t.Logf("Result: %+v", result)
+	expected := types.Result{
+		WeatherAPI1: types.FiveDayForecast{
+			Day1: types.Forecast{
+				Date:    "2024-11-05",
+				MaxTemp: 21.7,
+			},
+			Day2: types.Forecast{
+				Date:    "2024-11-06",
+				MaxTemp: 20.5,
+			},
+			Day3: types.Forecast{
+				Date:    "2024-11-07",
+				MaxTemp: 21.4,
+			},
+			Day4: types.Forecast{
+				Date:    "2024-11-08",
+				MaxTemp: 17.8,
+			},
+			Day5: types.Forecast{
+				Date:    "2024-11-09",
+				MaxTemp: 17.3,
+			},
+		},
+	}
 
-	t.Fatal("NIY: Output Verification")
+	if !cmp.Equal(expected, result) {
+		fmt.Println(cmp.Diff(expected, result))
+		t.Error("output mismatch, see diff for details")
+	}
 }
 
 // Coordinates Boundary tests:

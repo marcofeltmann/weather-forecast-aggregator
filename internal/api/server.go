@@ -19,7 +19,6 @@ https://grafana.com/blog/2024/02/09/how-i-write-http-services-in-go-after-13-yea
 type Server struct {
 	logger *slog.Logger
 	mux    *http.ServeMux
-	// TODO: Export vars managed here
 }
 
 /*

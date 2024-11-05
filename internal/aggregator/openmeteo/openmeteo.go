@@ -110,8 +110,7 @@ func (c Caller) AggregateWeather(lat, lon float64) (types.FiveDayForecast, error
 			}
 
 			var tmp wrapper
-			err = json.Unmarshal(bb, &tmp)
-			if err != nil {
+			if err = json.Unmarshal(bb, &tmp); err != nil {
 				return fmt.Errorf("Unmarshal response data from %s failed: %w", u.String(), err)
 			}
 

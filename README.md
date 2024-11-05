@@ -51,6 +51,47 @@ Using `go mod vendor` copys the required code of that package into this
 repository so we have life-time access to the used version with the little
 overhead of a slightly larger app repository
 
+## [golang.org/x/sync](https://pkg.go.dev/golang.org/x/sync) by Google
+
+The sync package provides ErrorGroups that act like WaitGroups, but they are
+able to collect errors that happened along the path.
+
+As a bunch of things might fail during HTTP and Network I prefer ErrorGroups for
+orchestrating GoRoutines.
+
+### Risk Analysis
+
+The `golang.org/x` package is the "area to mature before it makes it into the
+standard library".
+
+It is kind of the staging area for the standard library, so I don't see any
+other risks beside it's disappearance after being transferred into the standard
+library.
+
+### Risk Minimization Options
+
+Using `go mod vendor` enables the usage of the `x/sync` package without code
+changes even after it was transferred to the standard library.
+
+## [github.com/google/go-cmp](https://pkg.go.dev/github.com/google/go-cmp@v0.6.0) by The Go Authors
+
+This packages provides an easier and more reliable way to compare structs and
+other complex data types for semantical equality than a self-coded solution with
+the standard library's `reflect` package does.
+
+### Risk Analysis
+
+It's not directly bound to the official Google repositories, only created by the
+Go Authors.  
+The BSD license does not exclude a potencial disappearance of this package.
+
+### Risk Minimization Options
+
+Using `go mod vendor` enables the usage of the `co-cmp` package even when it was
+discontinued.
+
+Limiting usage on testing reduces the amount of rewrite work of the functionality.
+
 ## Primer: Manage Application Dependencies
 
 As I use Linux for a pretty long time and I believe managing all the tools for a
