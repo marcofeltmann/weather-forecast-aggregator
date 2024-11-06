@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"expvar"
 	"fmt"
 	"log/slog"
@@ -27,6 +28,9 @@ func init() {
 
 const MissingParameterErrorDescription = `Missing request parameter(s).
 Please provide valid 'lat' and 'lon' in the URL.`
+
+const ParameterOutOfBoundsErrorDescription = `Parameters out of bounds.
+lat must be within -90 and 90, lon must be within -180 and 180.`
 
 // addRoutes manages the endpoint routing for the API server.
 // Having all the information at one place might make navigating through the
@@ -91,26 +95,36 @@ func (s Server) dataAggregation(w http.ResponseWriter, r *http.Request) error {
 	}{}
 
 	params := r.URL.Query()
+	pLat := params.Get("lat")
+	pLon := params.Get("lon")
 
-	if !params.Has("lat") || !params.Has("lon") {
+	var empty string
+	if empty == pLat || empty == pLon {
+		err := errors.New(MissingParameterErrorDescription)
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, MissingParameterErrorDescription)
-		return fmt.Errorf("bad request: missing lat or lon params: %+#v", params)
+		fmt.Fprint(w, err.Error())
+		return err
 	}
 
-	lat, err := strconv.ParseFloat(params.Get("lat"), 64)
+	lat, err := strconv.ParseFloat(pLat, 64)
 	if err != nil {
 		extErr := fmt.Errorf("parse latitude parameter %#v into float: %w", lat, err)
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, extErr.Error())
 		return extErr
 	}
-	lon, err := strconv.ParseFloat(params.Get("lon"), 64)
+	lon, err := strconv.ParseFloat(pLon, 64)
 	if err != nil {
 		extErr := fmt.Errorf("parse longitude parameter %#v into float: %w", lon, err)
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, extErr.Error())
 		return extErr
+	}
+
+	if !saneInputs(lat, lon) {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, ParameterOutOfBoundsErrorDescription)
+		return fmt.Errorf("bad request: lat or lon params out of bounds: %+#v", params)
 	}
 
 	aa, err := s.aggregators()
@@ -157,4 +171,19 @@ func (s Server) dataAggregation(w http.ResponseWriter, r *http.Request) error {
 	// w.Write implicitely calls w.WriteHeader(http.StatusOK) before writing data
 	_, err = w.Write(data)
 	return err
+}
+
+func saneInputs(lat, lon float64) bool {
+	switch {
+	case lat < -90.000000:
+		return false
+	case lat > 90.000000:
+		return false
+	case lon < -180.000000:
+		return false
+	case lon > 180.000000:
+		return false
+	default:
+		return true
+	}
 }
