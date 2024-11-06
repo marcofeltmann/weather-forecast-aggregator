@@ -87,12 +87,7 @@ func (s Server) meterMiddleware(inner func(http.ResponseWriter, *http.Request) e
 // dataAggregation verifies the request parameters, hooks up the aggregators and
 // responses with the aggregated data, or with error status and messages.
 func (s Server) dataAggregation(w http.ResponseWriter, r *http.Request) error {
-
-	transfer := struct {
-		WeatherAPI1 types.FiveDayForecast
-		WeatherAPI2 types.FiveDayForecast
-		//TODO: Extend with new APIs here
-	}{}
+	transfer := make(map[string]types.FiveDayForecast)
 
 	params := r.URL.Query()
 	pLat := params.Get("lat")
@@ -136,6 +131,7 @@ func (s Server) dataAggregation(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	for i, a := range aa {
+		key := fmt.Sprintf("weatherAPI%d", i)
 		part, err := a.AggregateWeather(lat, lon)
 		if err != nil {
 			extErr := fmt.Errorf("Request API %d failed: %+v", i, err)
@@ -143,19 +139,8 @@ func (s Server) dataAggregation(w http.ResponseWriter, r *http.Request) error {
 			fmt.Fprint(w, extErr.Error())
 			return extErr
 		}
-		switch i {
-		case 0:
-			transfer.WeatherAPI1 = part
-		case 1:
-			transfer.WeatherAPI2 = part
 
-		//TODO: Extend with new APIs here
-		default:
-			extErr := fmt.Errorf("Unhandled WeatherAPI ID %d", i)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, extErr.Error())
-			return extErr
-		}
+		transfer[key] = part
 	}
 
 	data, err := json.Marshal(transfer)

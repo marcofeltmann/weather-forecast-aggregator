@@ -15,6 +15,13 @@ import (
 	"github.com/marcofeltmann/weather-forecast-aggregator/internal/types"
 )
 
+// result type is used to unmarshal the received json into. I hardcode it for
+// testing convenience.
+type testResult struct {
+	WeatherAPI1 types.FiveDayForecast `json:"weatherAPI1"`
+	WeatherAPI2 types.FiveDayForecast `json:"weatherAPI2"`
+}
+
 // TestGetWeatherEndpoint_ReturnsResult verifies the output contains both external
 // endpoints.
 // It will fail each day due to the reason of getting forecasts from today until
@@ -63,13 +70,13 @@ func TestGetWeatherEndpoint_ReturnsResult(t *testing.T) {
 		t.Fatal("Can't verify response integrity, aborting!")
 	}
 
-	var result types.Result
+	var result testResult
 	if err := json.Unmarshal(data, &result); err != nil {
 		t.Errorf("Unable to unmarshal API response data, got %+v", err)
 		t.Fatal("Can't verify response integrity, aborting!")
 	}
 
-	expected := types.Result{
+	expected := testResult{
 		WeatherAPI1: types.FiveDayForecast{
 			Day1: types.Forecast{
 				Date:    "2024-11-05",
